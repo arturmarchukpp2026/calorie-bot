@@ -222,3 +222,5 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 *.db
+test.jpg
+test_photos/
