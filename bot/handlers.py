@@ -45,3 +45,15 @@ async def cmd_week(message: Message):
     total = sum(d["calories"] for d in days)
     lines.append(f"\nРазом: {total:.0f} ккал, у середньому {total / len(days):.0f} ккал/день")
     await message.answer("\n".join(lines))
+
+@router.message(Command("today"))
+async def cmd_today(message: Message):
+    t = db.get_today_totals(message.from_user.id)
+    if t["count"] == 0:
+        await message.answer("Сьогодні ще нічого не записано.")
+        return
+    await message.answer(
+        f"Сьогодні ({t['count']} прийомів їжі):\n"
+        f"{t['calories']:.0f} ккал · Б {t['protein']:.0f} г · "
+        f"Ж {t['fat']:.0f} г · В {t['carbs']:.0f} г"
+    )
