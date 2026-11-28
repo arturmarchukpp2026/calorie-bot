@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 import sqlite3
 
 DB_PATH = "calories.db"
@@ -55,3 +55,20 @@ def add_meal(user_id: int, meal: dict):
                 date.today().isoformat(),
             ),
         )
+
+        
+def get_week_stats(user_id: int) -> list:
+    """Підсумки КБЖВ по днях за останні 7 днів (включно з сьогодні)."""
+    start = (date.today() - timedelta(days=6)).isoformat()
+    with _connect() as conn:
+        rows = conn.execute(
+            "SELECT eaten_on, COALESCE(SUM(calories), 0), COALESCE(SUM(protein), 0), "
+            "COALESCE(SUM(fat), 0), COALESCE(SUM(carbs), 0) "
+            "FROM meals WHERE user_id = ? AND eaten_on >= ? "
+            "GROUP BY eaten_on ORDER BY eaten_on",
+            (user_id, start),
+        ).fetchall()
+    return [
+        {"date": r[0], "calories": r[1], "protein": r[2], "fat": r[3], "carbs": r[4]}
+        for r in rows
+    ]

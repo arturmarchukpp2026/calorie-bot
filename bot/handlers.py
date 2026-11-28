@@ -27,3 +27,21 @@ async def cmd_undo(message: Message):
         await message.answer("Немає записів для видалення.")
         return
     await message.answer(f"Видалено: {deleted['dish']} ({deleted['calories']:.0f} ккал)")
+
+
+@router.message(Command("week"))
+async def cmd_week(message: Message):
+    days = db.get_week_stats(message.from_user.id)
+    if not days:
+        await message.answer("За останні 7 днів записів немає.")
+        return
+    lines = ["Статистика за 7 днів:"]
+    for d in days:
+        day = f"{d['date'][8:10]}.{d['date'][5:7]}"
+        lines.append(
+            f"{day}: {d['calories']:.0f} ккал "
+            f"(Б {d['protein']:.0f} / Ж {d['fat']:.0f} / В {d['carbs']:.0f})"
+        )
+    total = sum(d["calories"] for d in days)
+    lines.append(f"\nРазом: {total:.0f} ккал, у середньому {total / len(days):.0f} ккал/день")
+    await message.answer("\n".join(lines))
