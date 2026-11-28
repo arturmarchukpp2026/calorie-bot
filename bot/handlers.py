@@ -1,3 +1,5 @@
+import logging
+
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import Message
@@ -47,6 +49,7 @@ async def cmd_week(message: Message):
     lines.append(f"\nРазом: {total:.0f} ккал, у середньому {total / len(days):.0f} ккал/день")
     await message.answer("\n".join(lines))
 
+
 @router.message(Command("today"))
 async def cmd_today(message: Message):
     t = db.get_today_totals(message.from_user.id)
@@ -60,25 +63,27 @@ async def cmd_today(message: Message):
     )
 
 
-
 @router.message(F.photo)
 async def on_photo(message: Message):
-    await message.answer("Аналізую фото…")
+    status = await message.answer("Аналізую фото…")
     file = await message.bot.download(message.photo[-1])  # найбільший розмір
     try:
         meal = await analyze_food(file.read())
     except Exception:
-        await message.answer("Не вдалося розпізнати. Спробуй ще раз через хвилину.")
+        logging.exception("Помилка розпізнавання фото")
+        await status.edit_text("Не вдалося розпізнати. Спробуй ще раз через хвилину.")
         return
 
     if not meal.get("is_food"):
-        await message.answer("Не бачу на фото їжі. Спробуй інше фото.")
+        await status.edit_text("Не бачу на фото їжі. Спробуй інше фото.")
         return
 
     db.add_meal(message.from_user.id, meal)
-    await message.answer(
+    today = db.get_today_totals(message.from_user.id)
+    await status.edit_text(
         f"{meal['dish']} (~{meal['weight_g']} г)\n"
         f"Калорії: {meal['calories']} ккал\n"
-        f"Білки: {meal['protein']} г · Жири: {meal['fat']} г · Вуглеводи: {meal['carbs']} г\n"
-        "Збережено в щоденник."
+        f"Білки: {meal['protein']} г · Жири: {meal['fat']} г · Вуглеводи: {meal['carbs']} г\n\n"
+        f"Збережено. Сьогодні разом: {today['calories']:.0f} ккал\n"
+        "Помилився? /undo"
     )
