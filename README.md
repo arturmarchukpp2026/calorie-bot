@@ -121,4 +121,4 @@ python -u test_vision.py test_photos/*
 | Андрій Цимбалістий | [@andriy181-1](https://github.com/andriy181-1) | Розпізнавання їжі (Gemini), README |
 | Назарій | [@nazariikondiukpp2026-cyber](https://github.com/nazariikondiukpp2026-cyber) | База даних і статистика |
 
-Задачі ведемо в Jira за Scrum, кожна задача — окрема гілка `feature/SCRUM-<номер>-...` і Pull Request з рев'ю.
+Задачі ведемо в Jira за Scrum, кожна задача — окрема гілка `feature/SCRUM-<номер>-...` і Pull Request з рев'ю.  Daily проводимо щодня в чаті команди.
