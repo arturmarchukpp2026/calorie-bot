@@ -1,3 +1,4 @@
+from datetime import date
 import sqlite3
 
 DB_PATH = "calories.db"
@@ -36,3 +37,22 @@ def delete_last_meal(user_id: int):
             return None
         conn.execute("DELETE FROM meals WHERE id = ?", (row[0],))
     return {"dish": row[1], "calories": row[2] or 0}
+  
+    
+def add_meal(user_id: int, meal: dict):
+    """Зберігає прийом їжі. meal має поля dish, weight_g, calories, protein, fat, carbs."""
+    with _connect() as conn:
+        conn.execute(
+            "INSERT INTO meals (user_id, dish, weight_g, calories, protein, fat, carbs, eaten_on) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                user_id,
+                meal["dish"],
+                meal.get("weight_g"),
+                meal["calories"],
+                meal["protein"],
+                meal["fat"],
+                meal["carbs"],
+                date.today().isoformat(),
+            ),
+        )
