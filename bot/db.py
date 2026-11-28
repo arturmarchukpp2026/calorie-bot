@@ -23,3 +23,16 @@ def init_db():
                 eaten_on TEXT NOT NULL
             )
         """)
+
+
+def delete_last_meal(user_id: int):
+    """Видаляє останній запис користувача. Повертає видалений запис або None."""
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT id, dish, calories FROM meals WHERE user_id = ? ORDER BY id DESC LIMIT 1",
+            (user_id,),
+        ).fetchone()
+        if row is None:
+            return None
+        conn.execute("DELETE FROM meals WHERE id = ?", (row[0],))
+    return {"dish": row[1], "calories": row[2] or 0}
