@@ -1,8 +1,9 @@
-from aiogram import Router
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
 from bot import db
+from bot.vision import analyze_food
 
 router = Router()
 
@@ -56,4 +57,28 @@ async def cmd_today(message: Message):
         f"Сьогодні ({t['count']} прийомів їжі):\n"
         f"{t['calories']:.0f} ккал · Б {t['protein']:.0f} г · "
         f"Ж {t['fat']:.0f} г · В {t['carbs']:.0f} г"
+    )
+
+
+
+@router.message(F.photo)
+async def on_photo(message: Message):
+    await message.answer("Аналізую фото…")
+    file = await message.bot.download(message.photo[-1])  # найбільший розмір
+    try:
+        meal = await analyze_food(file.read())
+    except Exception:
+        await message.answer("Не вдалося розпізнати. Спробуй ще раз через хвилину.")
+        return
+
+    if not meal.get("is_food"):
+        await message.answer("Не бачу на фото їжі. Спробуй інше фото.")
+        return
+
+    db.add_meal(message.from_user.id, meal)
+    await message.answer(
+        f"{meal['dish']} (~{meal['weight_g']} г)\n"
+        f"Калорії: {meal['calories']} ккал\n"
+        f"Білки: {meal['protein']} г · Жири: {meal['fat']} г · Вуглеводи: {meal['carbs']} г\n"
+        "Збережено в щоденник."
     )
