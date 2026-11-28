@@ -72,3 +72,20 @@ def get_week_stats(user_id: int) -> list:
         {"date": r[0], "calories": r[1], "protein": r[2], "fat": r[3], "carbs": r[4]}
         for r in rows
     ]
+
+def get_today_totals(user_id: int) -> dict:
+    """Повертає кількість прийомів їжі та суму КБЖВ за сьогодні."""
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT COUNT(*), COALESCE(SUM(calories), 0), COALESCE(SUM(protein), 0), "
+            "COALESCE(SUM(fat), 0), COALESCE(SUM(carbs), 0) "
+            "FROM meals WHERE user_id = ? AND eaten_on = ?",
+            (user_id, date.today().isoformat()),
+        ).fetchone()
+    return {
+        "count": row[0],
+        "calories": row[1],
+        "protein": row[2],
+        "fat": row[3],
+        "carbs": row[4],
+    }
